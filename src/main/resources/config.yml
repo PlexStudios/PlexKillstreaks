@@ -1,0 +1,68 @@
+# ============================================================
+# Plex Killstreaks
+# ============================================================
+
+branding:
+  prefix: "<red><bold>KILLSTREAK</bold></red> <dark_gray>»</dark_gray>"
+
+settings:
+
+  action-bar:
+    enabled: true
+    format: "<red>🔥</red> <white>Kill Streak: <red>{streak}</red>"
+
+  milestone-announcements:
+    enabled: true
+
+  streak-ended-announcements:
+    enabled: true
+
+  sounds:
+    enabled: true
+    milestone: "ENTITY_PLAYER_LEVELUP"
+    streak-ended: "BLOCK_NOTE_BLOCK_BASS"
+
+  streak-menu:
+    progress-bar:
+      enabled: true
+      length: 10
+      completed: "<red>■</red>"
+      remaining: "<dark_gray>■</dark_gray>"
+
+milestones:
+
+  "3":
+    enabled: true
+    message: "<prefix> <white>{player}</white> <gray>is on a <red>3 kill streak</red>!"
+
+  "5":
+    enabled: true
+    message: "<prefix> <white>{player}</white> <gray>is on a <red>5 kill streak</red>!"
+
+  "10":
+    enabled: true
+    message: "<prefix> <white>{player}</white> <gray>is on a <red>10 kill streak</red>!"
+
+  "15":
+    enabled: true
+    message: "<prefix> <white>{player}</white> <gray>is <red>DOMINATING</red> <gray>with a <red>15 kill streak</red>!"
+
+  "25":
+    enabled: true
+    message: "<prefix> <white>{player}</white> <gray>is <red><bold>UNSTOPPABLE</bold></red> <gray>with a <red>25 kill streak</red>!"
+
+messages:
+
+  loading: "<prefix> <gray>Your streak data is still loading..."
+
+  streak:
+    header: ""
+    separator: "<dark_gray>━━━━━━━━━━━━━━━━━━</dark_gray>"
+    current: "<red>🔥</red> <gray>Current Streak: <red>{current}</red>"
+    highest: "<gold>🏆</gold> <gray>Highest Streak: <gold>{highest}</gold>"
+    next: "<yellow>⚡</yellow> <gray>Next Milestone: <red>{next}</red>"
+    progress: "<gray>Progress: {bar} <dark_gray>({current}/{next})</dark_gray>"
+    no-next: "<gold>🏆</gold> <gray>You have reached every configured milestone!"
+    footer: ""
+
+  streak-ended: "<prefix> <white>{player}</white><gray>'s <red>{streak}</red> kill streak has ended!"
