@@ -51,25 +51,20 @@ public class KillstreakPlaceholder extends PlaceholderExpansion {
             @NotNull String params
     ) {
 
-        if (player == null) {
-            return "0";
+        String placeholder = params.toLowerCase(java.util.Locale.ROOT);
+
+        if (!isSupported(placeholder)) {
+            return null;
         }
 
-        if (!streakManager.isLoaded(player)) {
-            return switch (params.toLowerCase()) {
-                case "current",
-                     "highest",
-                     "next_milestone",
-                     "progress" -> "0";
-
-                case "is_active",
-                     "loaded" -> "false";
-
-                default -> null;
-            };
+        if (player == null || !streakManager.isLoaded(player)) {
+            return placeholder.equals("is_active") ||
+                    placeholder.equals("loaded")
+                    ? "false"
+                    : "0";
         }
 
-        return switch (params.toLowerCase()) {
+        return switch (placeholder) {
 
             case "current" ->
                     String.valueOf(
@@ -103,6 +98,18 @@ public class KillstreakPlaceholder extends PlaceholderExpansion {
                     "true";
 
             default -> null;
+        };
+    }
+
+    private boolean isSupported(String placeholder) {
+        return switch (placeholder) {
+            case "current",
+                 "highest",
+                 "next_milestone",
+                 "progress",
+                 "is_active",
+                 "loaded" -> true;
+            default -> false;
         };
     }
 }

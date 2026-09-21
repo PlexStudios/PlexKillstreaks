@@ -2,8 +2,8 @@ package com.plexdev.plexkillstreaks.manager;
 
 import com.plexdev.plexkillstreaks.PlexKillstreaks;
 import com.plexdev.plexkillstreaks.database.DatabaseManager;
-import org.bukkit.entity.Player;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.Player;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -13,26 +13,18 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class StreakManager {
 
     private final PlexKillstreaks plugin;
     private final DatabaseManager databaseManager;
 
-    private final Map<UUID, Integer> currentStreaks =
-            new HashMap<>();
-
-    private final Map<UUID, Integer> highestStreaks =
-            new HashMap<>();
-
-    private final Set<UUID> loadedPlayers =
-            new HashSet<>();
-
-    private final Map<UUID, Long> playerSessions =
-            new HashMap<>();
-
-    private final Map<UUID, CompletableFuture<Void>> saveChains =
-            new HashMap<>();
+    private final Map<UUID, Integer> currentStreaks = new HashMap<>();
+    private final Map<UUID, Integer> highestStreaks = new HashMap<>();
+    private final Set<UUID> loadedPlayers = new HashSet<>();
+    private final Map<UUID, Long> playerSessions = new HashMap<>();
+    private final Map<UUID, CompletableFuture<Void>> saveChains = new HashMap<>();
 
     private final ExecutorService databaseExecutor =
             Executors.newSingleThreadExecutor();
@@ -65,10 +57,15 @@ public class StreakManager {
         );
     }
 
+    public synchronized boolean isLoaded(Player player) {
+        return loadedPlayers.contains(
+                player.getUniqueId()
+        );
+    }
+
     public int getNextMilestone(Player player) {
 
-        int current =
-                getCurrentStreak(player);
+        int current = getCurrentStreak(player);
 
         ConfigurationSection milestones =
                 plugin.getConfig()
@@ -156,6 +153,14 @@ public class StreakManager {
                                 "<dark_gray>■</dark_gray>"
                         );
 
+        if (completed == null) {
+            completed = "";
+        }
+
+        if (remaining == null) {
+            remaining = "";
+        }
+
         double percentage =
                 Math.min(
                         1.0,
@@ -172,12 +177,6 @@ public class StreakManager {
 
         return completed.repeat(completedAmount)
                 + remaining.repeat(remainingAmount);
-    }
-
-    public synchronized boolean isLoaded(Player player) {
-        return loadedPlayers.contains(
-                player.getUniqueId()
-        );
     }
 
     public synchronized int addKill(Player player) {
@@ -197,18 +196,23 @@ public class StreakManager {
                 newStreak
         );
 
-        if (newStreak > getHighestStreak(player)) {
+        int highest =
+                getHighestStreak(player);
+
+        if (newStreak > highest) {
+
+            highest = newStreak;
 
             highestStreaks.put(
                     uuid,
-                    newStreak
+                    highest
             );
         }
 
         queueSave(
                 uuid,
                 newStreak,
-                getHighestStreak(player)
+                highest
         );
 
         return newStreak;
@@ -240,6 +244,56 @@ public class StreakManager {
         return oldStreak;
     }
 
+    public synchronized void ensureLoaded(Player player) {
+
+        if (player == null || !player.isOnline()) {
+            return;
+        }
+
+        UUID uuid = player.getUniqueId();
+
+        if (loadedPlayers.contains(uuid)) {
+            return;
+        }
+
+        try {
+
+            DatabaseManager.PlayerData data =
+                    databaseManager.loadPlayer(uuid);
+
+            currentStreaks.put(
+                    uuid,
+                    data.currentStreak()
+            );
+
+            highestStreaks.put(
+                    uuid,
+                    data.highestStreak()
+            );
+
+        } catch (Throwable throwable) {
+
+            plugin.getLogger().warning(
+                    "Failed fallback load for "
+                            + player.getName()
+                            + ": "
+                            + throwable.getMessage()
+            );
+
+            currentStreaks.putIfAbsent(
+                    uuid,
+                    0
+            );
+
+            highestStreaks.putIfAbsent(
+                    uuid,
+                    0
+            );
+        }
+
+        loadedPlayers.add(uuid);
+    }
+
     public void loadPlayer(Player player) {
 
         UUID uuid =
@@ -258,6 +312,12 @@ public class StreakManager {
             loadedPlayers.remove(uuid);
         }
 
+        plugin.getLogger().info(
+                "Loading streak data for "
+                        + player.getName()
+                        + "..."
+        );
+
         databaseExecutor.execute(() -> {
 
             DatabaseManager.PlayerData data;
@@ -267,13 +327,59 @@ public class StreakManager {
                 data =
                         databaseManager.loadPlayer(uuid);
 
-            } catch (Exception exception) {
+            } catch (Throwable exception) {
 
                 plugin.getLogger().severe(
                         "Failed to load streak data for "
-                                + uuid + ": "
+                                + player.getName()
+                                + ": "
                                 + exception.getMessage()
                 );
+
+                plugin.getServer()
+                        .getScheduler()
+                        .runTask(
+                                plugin,
+                                () -> {
+
+                                    synchronized (StreakManager.this) {
+
+                                        Long currentSession =
+                                                playerSessions.get(uuid);
+
+                                        if (currentSession == null ||
+                                                currentSession != sessionId) {
+                                            return;
+                                        }
+
+                                        if (!player.isOnline()) {
+                                            return;
+                                        }
+
+                                        /*
+                                         * Keep the player usable even if
+                                         * the database temporarily fails.
+                                         */
+                                        currentStreaks.put(
+                                                uuid,
+                                                0
+                                        );
+
+                                        highestStreaks.put(
+                                                uuid,
+                                                0
+                                        );
+
+                                        loadedPlayers.add(uuid);
+
+                                        plugin.getLogger().warning(
+                                                "Using temporary zero streak data for "
+                                                        + player.getName()
+                                                        + " because the database load failed."
+                                        );
+                                    }
+                                }
+                        );
 
                 return;
             }
@@ -309,6 +415,16 @@ public class StreakManager {
                                     );
 
                                     loadedPlayers.add(uuid);
+
+                                    plugin.getLogger().info(
+                                            "Loaded streak data for "
+                                                    + player.getName()
+                                                    + " (Current: "
+                                                    + data.currentStreak()
+                                                    + ", Highest: "
+                                                    + data.highestStreak()
+                                                    + ")"
+                                    );
                                 }
                             }
                     );
@@ -320,8 +436,19 @@ public class StreakManager {
         UUID uuid =
                 player.getUniqueId();
 
+        Long session =
+                playerSessions.remove(uuid);
+
+        if (session == null) {
+            return;
+        }
+
         if (!loadedPlayers.contains(uuid)) {
-            playerSessions.remove(uuid);
+
+            loadedPlayers.remove(uuid);
+            currentStreaks.remove(uuid);
+            highestStreaks.remove(uuid);
+
             return;
         }
 
@@ -340,7 +467,6 @@ public class StreakManager {
         currentStreaks.remove(uuid);
         highestStreaks.remove(uuid);
         loadedPlayers.remove(uuid);
-        playerSessions.remove(uuid);
     }
 
     private synchronized void queueSave(
@@ -348,10 +474,6 @@ public class StreakManager {
             int current,
             int highest
     ) {
-
-        if (shuttingDown) {
-            return;
-        }
 
         CompletableFuture<Void> previous =
                 saveChains.getOrDefault(
@@ -361,11 +483,29 @@ public class StreakManager {
 
         CompletableFuture<Void> next =
                 previous.thenRunAsync(
-                        () -> databaseManager.savePlayer(
-                                uuid,
-                                current,
-                                highest
-                        ),
+                        () -> {
+
+                            try {
+
+                                databaseManager.savePlayer(
+                                        uuid,
+                                        current,
+                                        highest
+                                );
+
+                            } catch (Exception exception) {
+
+                                plugin.getLogger().severe(
+                                        "Failed to save streak data for "
+                                                + uuid
+                                                + ": "
+                                                + exception.getMessage()
+                                );
+
+                                throw exception;
+                            }
+
+                        },
                         databaseExecutor
                 );
 
@@ -406,9 +546,18 @@ public class StreakManager {
 
         if (pending.length > 0) {
 
-            CompletableFuture.allOf(
-                    pending
-            ).join();
+            try {
+
+                CompletableFuture.allOf(
+                        pending
+                ).join();
+
+            } catch (Exception exception) {
+
+                plugin.getLogger().severe(
+                        "Some streak data could not be saved during shutdown."
+                );
+            }
         }
 
         databaseExecutor.shutdown();
@@ -417,7 +566,7 @@ public class StreakManager {
 
             if (!databaseExecutor.awaitTermination(
                     10,
-                    java.util.concurrent.TimeUnit.SECONDS
+                    TimeUnit.SECONDS
             )) {
 
                 databaseExecutor.shutdownNow();

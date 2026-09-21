@@ -49,6 +49,10 @@ public final class PlexKillstreaks extends JavaPlugin {
                         databaseManager
                 );
 
+        for (org.bukkit.entity.Player player : getServer().getOnlinePlayers()) {
+            streakManager.loadPlayer(player);
+        }
+
         getServer()
                 .getPluginManager()
                 .registerEvents(

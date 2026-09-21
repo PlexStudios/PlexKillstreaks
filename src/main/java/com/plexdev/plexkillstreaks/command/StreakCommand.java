@@ -31,6 +31,15 @@ public class StreakCommand implements CommandExecutor {
             String[] args
     ) {
 
+        if (args.length > 0) {
+
+            sender.sendMessage(
+                    "Usage: /" + label
+            );
+
+            return true;
+        }
+
         if (!(sender instanceof Player player)) {
 
             sender.sendMessage(
@@ -39,6 +48,22 @@ public class StreakCommand implements CommandExecutor {
 
             return true;
         }
+
+        if (!player.hasPermission("plexkillstreaks.streak")) {
+
+            send(
+                    player,
+                    plugin.getConfig()
+                            .getString(
+                                    "messages.no-permission",
+                                    "<prefix> <red>You don't have permission to use this command."
+                            )
+            );
+
+            return true;
+        }
+
+        streakManager.ensureLoaded(player);
 
         if (!streakManager.isLoaded(player)) {
 

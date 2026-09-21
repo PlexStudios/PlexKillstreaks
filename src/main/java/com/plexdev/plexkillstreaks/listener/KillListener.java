@@ -24,15 +24,34 @@ public class KillListener implements Listener {
         Player victim = event.getEntity();
         Player killer = victim.getKiller();
 
+        /*
+         * Handle the killer.
+         */
         if (killer != null && killer != victim) {
 
-            int streak = streakManager.addKill(killer);
+            streakManager.ensureLoaded(killer);
 
             if (streakManager.isLoaded(killer)) {
-                sendActionBar(killer, streak);
-                sendMilestone(killer, streak);
+
+                int streak =
+                        streakManager.addKill(killer);
+
+                sendActionBar(
+                        killer,
+                        streak
+                );
+
+                sendMilestone(
+                        killer,
+                        streak
+                );
             }
         }
+
+        /*
+         * Handle the victim.
+         */
+        streakManager.ensureLoaded(victim);
 
         if (!streakManager.isLoaded(victim)) {
             return;
@@ -42,7 +61,11 @@ public class KillListener implements Listener {
                 streakManager.getCurrentStreak(victim);
 
         if (oldStreak >= 3) {
-            sendStreakEnded(victim, oldStreak);
+
+            sendStreakEnded(
+                    victim,
+                    oldStreak
+            );
         }
 
         streakManager.resetStreak(victim);
@@ -62,12 +85,17 @@ public class KillListener implements Listener {
             return;
         }
 
-        String message = streakManager.getPlugin()
-                .getConfig()
-                .getString(
-                        "settings.action-bar.format",
-                        "<red>🔥</red> <white>Kill Streak: <red>{streak}</red>"
-                );
+        String message =
+                streakManager.getPlugin()
+                        .getConfig()
+                        .getString(
+                                "settings.action-bar.format",
+                                "<red>🔥</red> <white>Kill Streak: <red>{streak}</red>"
+                        );
+
+        if (message == null) {
+            return;
+        }
 
         message = message.replace(
                 "{streak}",
@@ -154,6 +182,10 @@ public class KillListener implements Listener {
                                 "<prefix> <white>{player}</white><gray>'s <red>{streak}</red> kill streak has ended!"
                         );
 
+        if (message == null || message.isBlank()) {
+            return;
+        }
+
         message = formatMessage(
                 message,
                 player,
@@ -184,10 +216,23 @@ public class KillListener implements Listener {
                                 "<red><bold>KILLSTREAK</bold></red> <dark_gray>»</dark_gray>"
                         );
 
+        if (prefix == null) {
+            prefix = "";
+        }
+
         return message
-                .replace("<prefix>", prefix)
-                .replace("{player}", player.getName())
-                .replace("{streak}", String.valueOf(streak));
+                .replace(
+                        "<prefix>",
+                        prefix
+                )
+                .replace(
+                        "{player}",
+                        player.getName()
+                )
+                .replace(
+                        "{streak}",
+                        String.valueOf(streak)
+                );
     }
 
     private void playSound(
@@ -207,9 +252,12 @@ public class KillListener implements Listener {
         String soundName =
                 streakManager.getPlugin()
                         .getConfig()
-                        .getString(configPath);
+                        .getString(
+                                configPath
+                        );
 
-        if (soundName == null || soundName.isBlank()) {
+        if (soundName == null ||
+                soundName.isBlank()) {
             return;
         }
 

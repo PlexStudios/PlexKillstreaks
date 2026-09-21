@@ -12,6 +12,8 @@ commands:
     usage: /streak
     aliases:
       - streaks
+    permission: plexkillstreaks.streak
+    permission-message: "You don't have permission to use this command."
 
   streakreload:
     description: Reload the Plex Killstreaks configuration
@@ -20,6 +22,10 @@ commands:
     permission-message: "You don't have permission to use this command."
 
 permissions:
+  plexkillstreaks.streak:
+    description: Allows the player to view their killstreak
+    default: true
+
   plexkillstreaks.reload:
     description: Allows the player to reload the Plex Killstreaks configuration
     default: op
