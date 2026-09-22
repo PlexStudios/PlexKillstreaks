@@ -186,7 +186,7 @@ See [`LICENSE`](LICENSE) for the full license text.
 
 ## 👤 Author
 
-**Plex**
+**Applex**
 
 GitHub:
 
@@ -199,4 +199,4 @@ https://github.com/ApplexDev
 
 ---
 
-Made with ❤️ by Plex.
+Made with ❤️ by Applex.
