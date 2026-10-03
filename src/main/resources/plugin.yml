@@ -4,7 +4,7 @@ main: com.plexdev.plexkillstreaks.PlexKillstreaks
 api-version: '1.21'
 author: Plex
 description: A lightweight and fully configurable killstreak plugin for Paper 1.21+
-website: https://github.com/applexDev/PlexKillstreaks
+website: https://github.com/PlexStudios/PlexKillstreaks
 
 commands:
   streak:
