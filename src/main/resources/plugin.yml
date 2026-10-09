@@ -1,18 +1,17 @@
 name: PlexKillstreaks
-version: 1.0.0
+version: '${version}'
 main: com.plexdev.plexkillstreaks.PlexKillstreaks
 api-version: '1.21'
-author: Plex
+author: Plex Studios
 description: A lightweight and fully configurable killstreak plugin for Paper 1.21+
 website: https://github.com/PlexStudios/PlexKillstreaks
 
 commands:
   streak:
     description: View your current and highest killstreak
-    usage: /streak
+    usage: /streak [top [page]]
     aliases:
       - streaks
-    permission: plexkillstreaks.streak
     permission-message: "You don't have permission to use this command."
 
   streakreload:
@@ -22,6 +21,10 @@ commands:
     permission-message: "You don't have permission to use this command."
 
 permissions:
+  plexkillstreaks.top:
+    description: Allows viewing the lifetime highest killstreak leaderboard
+    default: true
+
   plexkillstreaks.streak:
     description: Allows the player to view their killstreak
     default: true

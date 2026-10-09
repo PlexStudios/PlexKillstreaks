@@ -33,6 +33,7 @@ public class ReloadCommand implements CommandExecutor {
         }
 
         plugin.reloadConfig();
+        plugin.reloadSettings();
 
         sender.sendMessage(
                 miniMessage.deserialize(

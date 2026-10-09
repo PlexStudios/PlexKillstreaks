@@ -17,10 +17,6 @@ public class PlayerDataListener implements Listener {
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
 
-        streakManager.getPlugin().getLogger().info(
-                "Player joined: " + event.getPlayer().getName()
-        );
-
         streakManager.loadPlayer(
                 event.getPlayer()
         );
@@ -28,10 +24,6 @@ public class PlayerDataListener implements Listener {
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
-
-        streakManager.getPlugin().getLogger().info(
-                "Player left: " + event.getPlayer().getName()
-        );
 
         streakManager.removePlayer(
                 event.getPlayer()
