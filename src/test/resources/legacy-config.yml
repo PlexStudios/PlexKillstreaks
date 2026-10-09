@@ -14,11 +14,6 @@ settings:
   milestone-announcements:
     enabled: true
 
-  milestone-rewards:
-    enabled: true
-
-  disabled-worlds: []
-
   streak-ended-announcements:
     enabled: true
 
@@ -34,57 +29,29 @@ settings:
       completed: "<red>■</red>"
       remaining: "<dark_gray>■</dark_gray>"
 
-anti-farming:
-  enabled: true
-  window-seconds: 180
-  max-counted-kills-per-victim: 2
-  notify-killer: true
-
-leaderboard:
-  page-size: 10
-
 milestones:
 
   "3":
     enabled: true
     message: "<prefix> <white>{player}</white> <gray>is on a <red>3 kill streak</red>!"
-    rewards: []
 
   "5":
     enabled: true
     message: "<prefix> <white>{player}</white> <gray>is on a <red>5 kill streak</red>!"
-    rewards:
-      - "console:give {player} golden_apple 1"
 
   "10":
     enabled: true
     message: "<prefix> <white>{player}</white> <gray>is on a <red>10 kill streak</red>!"
-    rewards: []
 
   "15":
     enabled: true
     message: "<prefix> <white>{player}</white> <gray>is <red>DOMINATING</red> <gray>with a <red>15 kill streak</red>!"
-    rewards: []
 
   "25":
     enabled: true
     message: "<prefix> <white>{player}</white> <gray>is <red><bold>UNSTOPPABLE</bold></red> <gray>with a <red>25 kill streak</red>!"
-    rewards: []
 
 messages:
-
-  no-permission: "<prefix> <red>You don't have permission to use this command.</red>"
-  anti-farming: "<prefix> <gray>This kill did not count because you have already killed this player too many times recently.</gray>"
-
-  leaderboard:
-    header: "<dark_gray>━━━━━━━━ <red><bold>TOP KILLSTREAKS</bold></red> <dark_gray>━━━━━━━━</dark_gray>"
-    entry: "<red>#{rank}</red> <white>{player}</white> <dark_gray>»</dark_gray> <gold>{highest}</gold>"
-    footer: "<gray>Page {page}/{pages}</gray>"
-    empty: "<prefix> <gray>No leaderboard entries were found.</gray>"
-    loading: "<prefix> <gray>Loading leaderboard...</gray>"
-    pending: "<prefix> <gray>Your leaderboard is already loading.</gray>"
-    busy: "<prefix> <gray>The leaderboard is busy. Please try again shortly.</gray>"
-    error: "<prefix> <red>Unable to load the leaderboard. Please try again.</red>"
 
   loading: "<prefix> <gray>Your streak data is still loading..."
 

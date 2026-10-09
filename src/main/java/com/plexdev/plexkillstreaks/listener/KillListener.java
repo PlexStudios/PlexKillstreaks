@@ -1,6 +1,7 @@
 package com.plexdev.plexkillstreaks.listener;
 
 import com.plexdev.plexkillstreaks.manager.StreakManager;
+import com.plexdev.plexkillstreaks.config.PluginSettings;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
@@ -22,7 +23,11 @@ public class KillListener implements Listener {
     public void onPlayerDeath(PlayerDeathEvent event) {
 
         Player victim = event.getEntity();
+        if (streakManager.getPlugin().getSettings().isWorldDisabled(victim.getWorld().getName())) {
+            return;
+        }
         Player killer = victim.getKiller();
+        int rewardStreak = 0;
 
         /*
          * Handle the killer.
@@ -31,20 +36,25 @@ public class KillListener implements Listener {
 
             streakManager.ensureLoaded(killer);
 
-            if (streakManager.isLoaded(killer)) {
+            if (streakManager.isLoaded(killer) && allowKill(killer, victim)) {
+
+                int previous = streakManager.getCurrentStreak(killer);
 
                 int streak =
                         streakManager.addKill(killer);
 
-                sendActionBar(
-                        killer,
-                        streak
-                );
+                if (streak > previous) {
+                    sendActionBar(
+                            killer,
+                            streak
+                    );
 
-                sendMilestone(
-                        killer,
-                        streak
-                );
+                    sendMilestone(
+                            killer,
+                            streak
+                    );
+                    rewardStreak = streak;
+                }
             }
         }
 
@@ -53,22 +63,54 @@ public class KillListener implements Listener {
          */
         streakManager.ensureLoaded(victim);
 
-        if (!streakManager.isLoaded(victim)) {
-            return;
-        }
-
-        int oldStreak =
+        if (streakManager.isLoaded(victim)) {
+            int oldStreak =
                 streakManager.getCurrentStreak(victim);
 
-        if (oldStreak >= 3) {
+            if (oldStreak >= 3) {
 
             sendStreakEnded(
                     victim,
                     oldStreak
             );
-        }
+            }
 
-        streakManager.resetStreak(victim);
+            streakManager.resetStreak(victim);
+        }
+        if (rewardStreak > 0) runRewards(killer, rewardStreak);
+    }
+
+    private boolean allowKill(Player killer, Player victim) {
+        var plugin = streakManager.getPlugin();
+        if (!plugin.getSettings().antiFarmEnabled()) return true;
+        if (plugin.getAntiFarmTracker().tryCount(killer.getUniqueId(), victim.getUniqueId())) return true;
+        if (plugin.getAntiFarmTracker().isSaturated()) plugin.warnAntiFarmCapacity();
+        if (plugin.getSettings().notifyKiller()) {
+            String message = plugin.getConfig().getString("messages.anti-farming",
+                    "<prefix> <gray>This kill did not count because you have already killed this player too many times recently.</gray>");
+            killer.sendMessage(miniMessage.deserialize(formatMessage(message, killer, streakManager.getCurrentStreak(killer))));
+        }
+        return false;
+    }
+
+    private void runRewards(Player player, int streak) {
+        var plugin = streakManager.getPlugin();
+        PluginSettings.Milestone milestone = plugin.getSettings().milestone(streak);
+        if (!plugin.getSettings().rewardsEnabled() || milestone == null) return;
+        String name = player.getName();
+        String uuid = player.getUniqueId().toString();
+        String highest = String.valueOf(streakManager.getHighestStreak(player));
+        for (var reward : milestone.rewards()) {
+            String command = reward.command().replace("{player}", name).replace("{uuid}", uuid)
+                    .replace("{streak}", String.valueOf(streak)).replace("{highest}", highest);
+            try {
+                if (!Bukkit.dispatchCommand(reward.console() ? Bukkit.getConsoleSender() : player, command)) {
+                    plugin.getLogger().warning("Milestone " + streak + " reward command was not accepted.");
+                }
+            } catch (RuntimeException exception) {
+                plugin.getLogger().warning("Milestone " + streak + " reward command failed (" + exception.getClass().getSimpleName() + ").");
+            }
+        }
     }
 
     private void sendActionBar(
@@ -121,24 +163,12 @@ public class KillListener implements Listener {
             return;
         }
 
-        String path =
-                "milestones." + streak;
-
-        if (!streakManager.getPlugin()
-                .getConfig()
-                .getBoolean(
-                        path + ".enabled",
-                        false
-                )) {
+        var milestone = streakManager.getPlugin().getSettings().milestone(streak);
+        if (milestone == null) {
             return;
         }
 
-        String message =
-                streakManager.getPlugin()
-                        .getConfig()
-                        .getString(
-                                path + ".message"
-                        );
+        String message = milestone.message();
 
         if (message == null || message.isBlank()) {
             return;
@@ -249,25 +279,10 @@ public class KillListener implements Listener {
             return;
         }
 
-        String soundName =
-                streakManager.getPlugin()
-                        .getConfig()
-                        .getString(
-                                configPath
-                        );
-
-        if (soundName == null ||
-                soundName.isBlank()) {
-            return;
-        }
-
-        try {
-
-            Sound sound =
-                    Sound.valueOf(
-                            soundName.toUpperCase()
-                    );
-
+        Sound sound = configPath.equals("settings.sounds.milestone")
+                ? streakManager.getPlugin().getSettings().milestoneSound()
+                : streakManager.getPlugin().getSettings().endedSound();
+        if (sound != null) {
             player.playSound(
                     player.getLocation(),
                     sound,
@@ -275,14 +290,6 @@ public class KillListener implements Listener {
                     1.0f
             );
 
-        } catch (IllegalArgumentException exception) {
-
-            streakManager.getPlugin()
-                    .getLogger()
-                    .warning(
-                            "Invalid sound in config: "
-                                    + soundName
-                    );
         }
     }
 }

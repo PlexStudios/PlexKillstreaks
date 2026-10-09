@@ -27,7 +27,7 @@ public class KillstreakPlaceholder extends PlaceholderExpansion {
 
     @Override
     public @NotNull String getAuthor() {
-        return "Plex";
+        return "Plex Studios";
     }
 
     @Override
@@ -65,6 +65,9 @@ public class KillstreakPlaceholder extends PlaceholderExpansion {
         }
 
         return switch (placeholder) {
+
+            case "kills_to_next" -> String.valueOf(streakManager.getKillsToNext(player));
+            case "last_milestone" -> String.valueOf(streakManager.getLastMilestone(player));
 
             case "current" ->
                     String.valueOf(
@@ -109,6 +112,7 @@ public class KillstreakPlaceholder extends PlaceholderExpansion {
                  "progress",
                  "is_active",
                  "loaded" -> true;
+            case "kills_to_next", "last_milestone" -> true;
             default -> false;
         };
     }
