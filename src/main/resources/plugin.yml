@@ -1,0 +1,38 @@
+name: PlexKillstreaks
+version: '${version}'
+main: com.plexdev.plexkillstreaks.PlexKillstreaks
+api-version: '1.21'
+author: Plex Studios
+contributors: [ApplexDev]
+description: A lightweight and fully configurable killstreak plugin for Paper
+website: https://github.com/PlexStudios/PlexKillstreaks
+
+commands:
+  streak:
+    description: View your current and highest killstreak
+    usage: /streak [top [page]]
+    aliases:
+      - streaks
+    permission-message: "You don't have permission to use this command."
+
+  streakreload:
+    description: Reload the Plex Killstreaks configuration
+    usage: /streakreload
+    permission: plexkillstreaks.reload
+    permission-message: "You don't have permission to use this command."
+
+permissions:
+  plexkillstreaks.top:
+    description: Allows viewing the lifetime highest killstreak leaderboard
+    default: true
+
+  plexkillstreaks.streak:
+    description: Allows the player to view their killstreak
+    default: true
+
+  plexkillstreaks.reload:
+    description: Allows the player to reload the Plex Killstreaks configuration
+    default: op
+
+softdepend:
+  - PlaceholderAPI
