@@ -146,7 +146,7 @@ Use the included Gradle 9.7.1 wrapper, with Java 21 installed as the compilation
 
 On Linux/macOS use `./gradlew clean test build`. Output is `build/libs/PlexKillstreaks-2.0.0.jar`. Gradle expands the project version into packaged `plugin.yml`. Paper API is pinned to `1.21.4-R0.1-20250925.065901-231`, and PlaceholderAPI to `2.12.3`; both are compile-only production dependencies. The older API keeps the Java 21 compilation baseline without forcing Java 25 bytecode. The wrapper distribution has SHA-256 verification. JUnit, Mockito, SQLite JDBC, and test API runtime dependencies are not bundled; Paper supplies the runtime SQLite driver.
 
-The 90 automated tests cover real SQLite migration copies, malformed stored values, pagination and failures, loading races, save recovery, anti-farming, reward dispatch, placeholders, command permissions, malformed reloads and legacy-config lifecycle. Server smoke tests are listed separately above. No performance benchmark or real-player PvP test was run. See [CHANGELOG.md](CHANGELOG.md) for recorded validation.
+Development validation reported 90 automated tests covering real SQLite migration copies, malformed stored values, pagination and failures, loading races, save recovery, anti-farming, reward dispatch, placeholders, command permissions, malformed reloads and legacy-config lifecycle. **The test source files are not currently included in the public repository, so this checkout cannot reproduce that reported suite.** Server smoke tests are listed separately above. No performance benchmark or real-player PvP test was run.
 
 ## Project and license
 
